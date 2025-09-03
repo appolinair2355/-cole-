@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}Saisie des Notes - Gestion École{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <h2 class="form-title">
+        <i class="fas fa-star"></i>
+        Saisie des Notes
+    </h2>
+    
+    <div class="form-group">
+        <label for="type_student">Type d'étudiant</label>
+        <select id="type_student" onchange="updateClassOptions()">
+            <option value="">Sélectionner</option>
+            <option value="ecolier">Écolier</option>
+            <option value="eleve">Élève</option>
+        </select>
+    </div>
+    
+    <div class="form-group">
+        <label for="classe">Classe</label>
+        <select id="classe" onchange="loadStudents()">
+            <option value="">Sélectionner</option>
+        </select>
+    </div>
+    
+    <div class="form-group">
+        <label for="matiere">Matière</label>
+        <select id="matiere" onchange="displayStudents()">
+            <option value="">Sélectionner</option>
+        </select>
+    </div>
+    
+    <div id="students-container"></div>
+    
+    <button class="btn" onclick="saveNotes()" style="margin-top: 20px;">
+        <i class="fas fa-save"></i> Enregistrer les notes
+    </button>
+</div>
+
+<script>
+function updateClassOptions() {
+    const type = document.getElementById('type_student').value;
+    const classeSelect = document.getElementById('classe');
+    const matiereSelect = document.getElementById('matiere');
+    
+    classeSelect.innerHTML = '<option value="">Sélectionner</option>';
+    matiereSelect.innerHTML = '<option value="">Sélectionner</option>';
+    
+    if (type === 'ecolier') {
+        const classes = ['maternelle', 'CI', 'CP', 'CE1', 'CE2', 'CM1', 'CM2'];
+        classes.forEach(classe => {
+            classeSelect.innerHTML += `<option value="${classe}">${classe}</option>`;
+        });
+    } else if (type === 'eleve') {
+        const classes = ['6ième', '5ième', '4ième', '3ième'];
+        classes.forEach(classe => {
+            classeSelect.innerHTML += `<option value="${classe}">${classe}</option>`;
+        });
+    }
+    
+    document.getElementById('students-container').innerHTML = '';
+}
+
+function updateMatiereOptions() {
+    const classe = document.getElementById('classe').value;
+    const matiereSelect = document.getElementById('matiere');
+    
+    const matieres = ['Mathématiques', 'Communication écrite', 'Lecture', 'Anglais', 'SVT', 'Histoire-géographie', 'Espagnol'];
+    
+    matiereSelect.innerHTML = '<option value="">Sélectionner</option>';
+    matieres.forEach(matiere => {
+        matiereSelect.innerHTML += `<option value="${matiere}">${matiere}</option>`;
+    });
+}
+
+document.getElementById('classe').addEventListener('change', function() {
+    if (this.value) {
+        updateMatiereOptions();
+        loadStudents();
+    }
+});
+</script>
+{% endblock %}
