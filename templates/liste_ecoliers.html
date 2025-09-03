@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}Liste des Écoliers - Gestion École{% endblock %}
+
+{% block content %}
+<div class="table-container">
+    <h2 class="form-title">
+        <i class="fas fa-graduation-cap"></i>
+        Liste des Écoliers (Maternelle - CM2)
+    </h2>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nom</th>
+                <th>Prénoms</th>
+                <th>Sexe</th>
+                <th>Date de naissance</th>
+                <th>Classe</th>
+                <th>Numéro parents</th>
+                <th>Montant scolarité</th>
+                <th>Date inscription</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for ecolier in ecoliers %}
+            <tr>
+                <td>{{ ecolier.id }}</td>
+                <td>{{ ecolier.nom }}</td>
+                <td>{{ ecolier.prenoms }}</td>
+                <td>{{ ecolier.sexe }}</td>
+                <td>{{ ecolier.date_naissance }}</td>
+                <td>{{ ecolier.classe }}</td>
+                <td>{{ ecolier.numero_parents }}</td>
+                <td>{{ ecolier.montant_scolarite }}</td>
+                <td>{{ ecolier.date_inscription }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+    {% if not ecoliers %}
+    <p style="text-align: center; color: #666; margin-top: 20px;">
+        Aucun écolier inscrit pour le moment
+    </p>
+    {% endif %}
+</div>
+{% endblock %}
+  
