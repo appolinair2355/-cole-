@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}Liste des Élèves - Gestion École{% endblock %}
+
+{% block content %}
+<div class="table-container">
+    <h2 class="form-title">
+        <i class="fas fa-list"></i>
+        Liste des Élèves (6ième - 3ième)
+    </h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nom</th>
+                <th>Prénoms</th>
+                <th>Sexe</th>
+                <th>Date de naissance</th>
+                <th>Classe</th>
+                <th>Numéro parents</th>
+                <th>Montant scolarité</th>
+                <th>Total payé</th>
+                <th>Reste</th>
+                <th>Date inscription</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for eleve in eleves %}
+            {% set total = namespace(value=0) %}
+            {% if 'payments' in eleve %}
+                {% for p in eleve.payments %}
+                    {% set total.value = total.value + p.amount|int %}
+                {% endfor %}
+            {% endif %}
+            <tr>
+                <td>{{ eleve.id }}</td>
+                <td>{{ eleve.nom }}</td>
+                <td>{{ eleve.prenoms }}</td>
+                <td>{{ eleve.sexe }}</td>
+                <td>{{ eleve.date_naissance }}</td>
+                <td>{{ eleve.classe }}</td>
+                <td>{{ eleve.numero_parents }}</td>
+                <td>{{ eleve.montant_scolarite }}</td>
+                <td>{{ total.value }}</td>
+                <td style="color: {% if (eleve.montant_scolarite|int - total.value) > 0 %}red{% else %}green{% endif %};">
+                    {{ eleve.montant_scolarite|int - total.value }}
+                </td>
+                <td>{{ eleve.date_inscription }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% if not eleves %}
+    <p style="text-align: center; color: #666; margin-top: 20px;">
+        Aucun élève inscrit pour le moment
+    </p>
+    {% endif %}
+</div>
+{% endblock %}
+  
