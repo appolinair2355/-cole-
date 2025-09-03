@@ -8,43 +8,42 @@
         <i class="fas fa-school"></i>
         Gestion École Moderne
     </h1>
-    
+
     <div class="buttons-grid">
         <a href="{{ url_for('inscription') }}" class="home-btn">
             <i class="fas fa-user-plus"></i>
             <span>Inscriptions</span>
         </a>
-        
+
         <a href="{{ url_for('liste_eleves') }}" class="home-btn">
             <i class="fas fa-list"></i>
             <span>Liste Élèves</span>
         </a>
-        
+
         <a href="{{ url_for('liste_ecoliers') }}" class="home-btn">
             <i class="fas fa-graduation-cap"></i>
             <span>Liste Écoliers</span>
         </a>
-        
+
         <a href="{{ url_for('scolarite') }}" class="home-btn">
             <i class="fas fa-money-bill-wave"></i>
             <span>Gestion Scolarité</span>
         </a>
-        
+
         <a href="{{ url_for('notes') }}" class="home-btn">
             <i class="fas fa-star"></i>
             <span>Saisie Notes</span>
         </a>
-        
+
         <a href="{{ url_for('vue_notes') }}" class="home-btn">
             <i class="fas fa-chart-bar"></i>
             <span>Voir Notes</span>
         </a>
-        
+
         <a href="{{ url_for('sauvegarde') }}" class="home-btn">
             <i class="fas fa-download"></i>
-            <span>Sauvegarder</span>
+            <span>Sauvegarder & Importer</span>
         </a>
     </div>
 </div>
 {% endblock %}
-    
