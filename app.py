@@ -87,24 +87,9 @@ def notes():
     classes_ecoliers = list(set([e['classe'] for e in ecoliers]))
     classes_eleves = list(set([e['classe'] for e in eleves]))
     
-    matieres = {
-        'maternelle': ['Mathématiques', 'Communication écrite', 'Lecture', 'Anglais', 'SVT', 'Histoire-géographie', 'Espagnol'],
-        'CI': ['Mathématiques', 'Communication écrite', 'Lecture', 'Anglais', 'SVT', 'Histoire-géographie', 'Espagnol'],
-        'CP': ['Mathématiques', 'Communication écrite', 'Lecture', 'Anglais', 'SVT', 'Histoire-géographie', 'Espagnol'],
-        'CE1': ['Mathématiques', 'Communication écrite', 'Lecture', 'Anglais', 'SVT', 'Histoire-géographie', 'Espagnol'],
-        'CE2': ['Mathématiques', 'Communication écrite', 'Lecture', 'Anglais', 'SVT', 'Histoire-géographie', 'Espagnol'],
-        'CM1': ['Mathématiques', 'Communication écrite', 'Lecture', 'Anglais', 'SVT', 'Histoire-géographie', 'Espagnol'],
-        'CM2': ['Mathématiques', 'Communication écrite', 'Lecture', 'Anglais', 'SVT', 'Histoire-géographie', 'Espagnol'],
-        '6ième': ['Mathématiques', 'Communication écrite', 'Lecture', 'Anglais', 'SVT', 'Histoire-géographie', 'Espagnol'],
-        '5ième': ['Mathématiques', 'Communication écrite', 'Lecture', 'Anglais', 'SVT', 'Histoire-géographie', 'Espagnol'],
-        '4ième': ['Mathématiques', 'Communication écrite', 'Lecture', 'Anglais', 'SVT', 'Histoire-géographie', 'Espagnol'],
-        '3ième': ['Mathématiques', 'Communication écrite', 'Lecture', 'Anglais', 'SVT', 'Histoire-géographie', 'Espagnol']
-    }
-    
     return render_template('notes.html', 
                          classes_ecoliers=classes_ecoliers,
-                         classes_eleves=classes_eleves,
-                         matieres=matieres)
+                         classes_eleves=classes_eleves)
 
 @app.route('/get_students_by_class', methods=['POST'])
 def get_students_by_class():
@@ -276,7 +261,16 @@ def export_excel():
         download_name=f'ecole_export_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
     )
 
+@app.route('/sauvegarde')
+def sauvegarde():
+    data = db.load_data()
+    stats = {
+        'ecoliers': len(data['ecoliers']),
+        'eleves': len(data['eleves']),
+        'notes': len(data['notes'])
+    }
+    return render_template('sauvegarde.html', stats=stats)
+
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 10000))
     app.run(host='0.0.0.0', port=port, debug=True)
-  
