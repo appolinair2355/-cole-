@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block title %}Gestion Scolarité - Gestion École{% endblock %}
+
+{% block content %}
+<div class="table-container">
+    <h2 class="form-title">
+        <i class="fas fa-money-bill-wave"></i>
+        Gestion des Paiements Scolarité
+    </h2>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>Nom</th>
+                <th>Prénoms</th>
+                <th>Classe</th>
+                <th>Montant Total</th>
+                <th>Total Payé</th>
+                <th>Reste à Payer</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for student in students %}
+            <tr>
+                <td>{{ student.nom }}</td>
+                <td>{{ student.prenoms }}</td>
+                <td>{{ student.classe }}</td>
+                <td>{{ student.montant_scolarite }}</td>
+                <td>{{ student.total_paid }}</td>
+                <td style="color: {% if student.reste > 0 %}red{% else %}green{% endif %}; font-weight: bold;">
+                    {{ student.reste }}
+                </td>
+                <td>
+                    <input type="number" class="payment-input" placeholder="Montant" min="0">
+                    <button class="payment-btn" onclick="makePayment({{ student.id }}, '{{ student.type }}')">
+                        Payer
+                    </button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+    {% if not students %}
+    <p style="text-align: center; color: #666; margin-top: 20px;">
+        Aucun étudiant trouvé
+    </p>
+    {% endif %}
+</div>
+
+<script>
+function makePayment(studentId, studentType) {
+    const row = event.target.closest('tr');
+    const input = row.querySelector('.payment-input');
+    const amount = input.value;
+    
+    if (!amount || amount <= 0) {
+        alert('Veuillez entrer un montant valide');
+        return;
+    }
+    
+    if (confirm(`Confirmer le paiement de ${amount} ?`)) {
+        fetch('/paiement', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                student_id: studentId,
+                student_type: studentType,
+                amount: amount
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showSuccess('Paiement enregistré avec succès');
+                setTimeout(() => location.reload(), 1000);
+            }
+        });
+    }
+}
+</script>
+{% endblock %}
+  
