@@ -6,26 +6,31 @@
 <div class="form-container">
     <h2 class="form-title">
         <i class="fas fa-download"></i>
-        Sauvegarde et Export des Données
+        Sauvegarde & Import/Export
     </h2>
-    
+
     <div style="display: grid; gap: 20px;">
-        <a href="{{ url_for('export_excel') }}" class="home-btn" style="text-decoration: none;">
+
+        <!-- Export -->
+        <a href="{{ url_for('export_excel') }}" class="home-btn">
             <i class="fas fa-file-excel"></i>
             <span>Exporter vers Excel</span>
         </a>
-        
-        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px;">
-            <h3>Sauvegarde automatique</h3>
-            <p>Toutes les données sont automatiquement sauvegardées dans le fichier <code>data/ecoles.yaml</code></p>
-        </div>
-        
+
+        <!-- Import -->
+        <a href="{{ url_for('import_excel') }}" class="home-btn">
+            <i class="fas fa-file-import"></i>
+            <span>Importer depuis Excel</span>
+        </a>
+
+        <!-- Stats -->
         <div style="background: #e3f2fd; padding: 20px; border-radius: 8px;">
             <h3>Statistiques</h3>
-            <p>Total Écoliers: {{ stats.ecoliers }}</p>
-            <p>Total Élèves: {{ stats.eleves }}</p>
-            <p>Total Notes: {{ stats.notes }}</p>
+            <p><strong>Écoliers :</strong> {{ stats.ecoliers }}</p>
+            <p><strong>Élèves :</strong> {{ stats.eleves }}</p>
+            <p><strong>Notes :</strong> {{ stats.notes }}</p>
         </div>
+
     </div>
 </div>
 {% endblock %}
