@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}Inscription - Gestion École{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <h2 class="form-title">
+        <i class="fas fa-user-plus"></i>
+        Formulaire d'Inscription
+    </h2>
+    
+    <form id="inscription-form">
+        <div class="form-group">
+            <label for="nom">Nom *</label>
+            <input type="text" id="nom" name="nom" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="prenoms">Prénoms *</label>
+            <input type="text" id="prenoms" name="prenoms" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="sexe">Sexe *</label>
+            <select id="sexe" name="sexe" required>
+                <option value="">Sélectionner</option>
+                <option value="Masculin">Masculin</option>
+                <option value="Féminin">Féminin</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="date_naissance">Date de naissance *</label>
+            <input type="date" id="date_naissance" name="date_naissance" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="classe">Classe *</label>
+            <select id="classe" name="classe" required>
+                <option value="">Sélectionner une classe</option>
+                <optgroup label="Écoles">
+                    <option value="maternelle">Maternelle</option>
+                    <option value="CI">CI</option>
+                    <option value="CP">CP</option>
+                    <option value="CE1">CE1</option>
+                    <option value="CE2">CE2</option>
+                    <option value="CM1">CM1</option>
+                    <option value="CM2">CM2</option>
+                </optgroup>
+                <optgroup label="Élèves">
+                    <option value="6ième">6ième</option>
+                    <option value="5ième">5ième</option>
+                    <option value="4ième">4ième</option>
+                    <option value="3ième">3ième</option>
+                </optgroup>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="numero_parents">Numéro des parents * (8 chiffres)</label>
+            <input type="tel" id="numero_parents" name="numero_parents" pattern="[0-9]{8}" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="montant_scolarite">Montant de la scolarité *</label>
+            <input type="number" id="montant_scolarite" name="montant_scolarite" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="nom_enregistreur">Nom de l'enregistreur *</label>
+            <input type="text" id="nom_enregistreur" name="nom_enregistreur" required>
+        </div>
+        
+        <button type="submit" class="btn">
+            <i class="fas fa-save"></i> Enregistrer
+        </button>
+    </form>
+</div>
+{% endblock %}
+              
