@@ -200,4 +200,52 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
-      
+
+// Fonction pour la page des notes
+function updateClassOptions() {
+    const type = document.getElementById('type_student').value;
+    const classeSelect = document.getElementById('classe');
+    const matiereSelect = document.getElementById('matiere');
+    
+    classeSelect.innerHTML = '<option value="">Sélectionner</option>';
+    matiereSelect.innerHTML = '<option value="">Sélectionner</option>';
+    
+    if (type === 'ecolier') {
+        const classes = ['maternelle', 'CI', 'CP', 'CE1', 'CE2', 'CM1', 'CM2'];
+        classes.forEach(classe => {
+            classeSelect.innerHTML += `<option value="${classe}">${classe}</option>`;
+        });
+    } else if (type === 'eleve') {
+        const classes = ['6ième', '5ième', '4ième', '3ième'];
+        classes.forEach(classe => {
+            classeSelect.innerHTML += `<option value="${classe}">${classe}</option>`;
+        });
+    }
+    
+    document.getElementById('students-container').innerHTML = '';
+}
+
+function updateMatiereOptions() {
+    const classe = document.getElementById('classe').value;
+    const matiereSelect = document.getElementById('matiere');
+    
+    const matieres = ['Mathématiques', 'Communication écrite', 'Lecture', 'Anglais', 'SVT', 'Histoire-géographie', 'Espagnol'];
+    
+    matiereSelect.innerHTML = '<option value="">Sélectionner</option>';
+    matieres.forEach(matiere => {
+        matiereSelect.innerHTML += `<option value="${matiere}">${matiere}</option>`;
+    });
+}
+
+// Pour la page des notes
+document.addEventListener('DOMContentLoaded', function() {
+    const classeSelect = document.getElementById('classe');
+    if (classeSelect) {
+        classeSelect.addEventListener('change', function() {
+            if (this.value) {
+                updateMatiereOptions();
+                loadStudents();
+            }
+        });
+    }
+});
