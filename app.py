@@ -1,287 +1,261 @@
-import os, uuid, re, datetime
-from flask import Flask, render_template, request, redirect, url_for, flash, send_file
-import yaml
-from openpyxl import Workbook
-from werkzeug.utils import secure_filename
+import sys
+print("Python version:", sys.version)
+
+from flask import Flask, render_template, request, jsonify, send_file, flash, redirect, url_for
+from models import Database
+from datetime import datetime
+import openpyxl
+from openpyxl.styles import Font, PatternFill
+import io
 
 app = Flask(__name__)
-app.secret_key = 'ecole-mont-sion-secret-key'
+app.secret_key = 'ecole_mont_sion_secret_key'
 
-# CONSTANTES
-PORT = 10000
-DATABASE = 'database.yaml'
-MATIERES = ['Math', 'Français', 'Science', 'Histoire', 'Géographie', 'Anglais', 'EPS']
-TRIMESTRES = ['Intero1', 'Intero2']
-ALLOWED_EXTENSIONS = {'xlsx'}
+db = Database()
 
-# ┌─────────────────────────────┐
-# │ 1. GESTION BASE YAML        │
-# └─────────────────────────────┘
-def load_data():
-    if os.path.exists(DATABASE):
-        with open(DATABASE, 'r', encoding='utf-8') as f:
-            data = yaml.safe_load(f) or {'primaire': [], 'secondaire': []}
-    else:
-        data = {'primaire': [], 'secondaire': []}
-    for niveau in ['primaire', 'secondaire']:
-        for eleve in data[niveau]:
-            eleve.setdefault('notes', {})
-            eleve.setdefault('paiements', [])
-            for m in MATIERES:
-                eleve['notes'].setdefault(m, {})
-                for t in TRIMESTRES:
-                    eleve['notes'][m].setdefault(t, '')
-    return data
+MATIERES = ['Mathématiques', 'Communication écrite', 'Lecture', 'Anglais', 'SVT', 'Histoire-géographie', 'Espagnol', 'EPS']
 
-def save_data(data):
-    with open(DATABASE, 'w', encoding='utf-8') as f:
-        yaml.safe_dump(data, f, allow_unicode=True, sort_keys=False)
-
-# ┌─────────────────────────────┐
-# │ 2. ROUTES WEB               │
-# └─────────────────────────────┘
+# ---------- ACCUEIL ----------
 @app.route('/')
-def index():
-    return render_template('index.html')
+def accueil():
+    return render_template('accueil.html')
 
-# -----------------------------
-# INSCRIPTION
-# -----------------------------
-@app.route('/register', methods=['GET', 'POST'])
-def register():
-    if request.method == 'POST':
-        nom = request.form.get('nom', '').strip()
-        prenom = request.form.get('prenom', '').strip()
-        classe = request.form.get('classe', '').strip()
-        niveau = request.form.get('niveau', '').strip()  # 'primaire' ou 'secondaire'
-        if not nom or not prenom or not classe or niveau not in ['primaire', 'secondaire']:
-            flash('Tous les champs sont obligatoires.', 'danger')
-            return redirect(url_for('register'))
-        data = load_data()
-        eleve = {
-            'id': str(uuid.uuid4()),
-            'nom': nom,
-            'prenom': prenom,
-            'classe': classe,
-            'notes': {},
-            'paiements': []
-        }
-        for m in MATIERES:
-            eleve['notes'][m] = {t: '' for t in TRIMESTRES}
-        data[niveau].append(eleve)
-        save_data(data)
-        flash('Élève inscrit avec succès.', 'success')
-        return redirect(url_for('students'))
-    return render_template('register.html')
+# ---------- INSCRIPTION ----------
+@app.route('/inscription')
+def inscription():
+    return render_template('inscription.html')
 
-# -----------------------------
-# LISTE ÉLÈVES
-# -----------------------------
-@app.route('/students')
-def students():
-    data = load_data()
-    classes = {}
-    for niveau in ['primaire', 'secondaire']:
-        for eleve in data[niveau]:
-            classe = eleve['classe']
-            classes.setdefault(classe, []).append(eleve)
-    return render_template('students.html', classes=classes)
+@app.route('/inscrire_ecolier', methods=['POST'])
+def inscrire_ecolier():
+    data = request.json
+    ecolier = {
+        'nom': data['nom'],
+        'prenoms': data['prenoms'],
+        'sexe': data['sexe'],
+        'date_naissance': data['date_naissance'],
+        'classe': data['classe'],
+        'numero_parents': data['numero_parents'],
+        'montant_scolarite': data['montant_scolarite'],
+        'nom_enregistreur': data['nom_enregistreur']
+    }
+    db.add_ecolier(ecolier)
+    return jsonify({'success': True})
 
-# -----------------------------
-# MODIFIER / SUPPRIMER
-# -----------------------------
-@app.route('/edit/<id>', methods=['GET', 'POST'])
-def edit(id):
-    data = load_data()
-    eleve = None
-    niveau = ''
-    for n in ['primaire', 'secondaire']:
-        for e in data[n]:
-            if e['id'] == id:
-                eleve = e
-                niveau = n
-                break
-    if not eleve:
-        flash('Élève introuvable.', 'danger')
-        return redirect(url_for('students'))
-    if request.method == 'POST':
-        eleve['nom'] = request.form.get('nom', '').strip()
-        eleve['prenom'] = request.form.get('prenom', '').strip()
-        eleve['classe'] = request.form.get('classe', '').strip()
-        save_data(data)
-        flash('Élève modifié avec succès.', 'success')
-        return redirect(url_for('students'))
-    return render_template('edit.html', eleve=eleve)
+@app.route('/inscrire_eleve', methods=['POST'])
+def inscrire_eleve():
+    data = request.json
+    eleve = {
+        'nom': data['nom'],
+        'prenoms': data['prenoms'],
+        'sexe': data['sexe'],
+        'date_naissance': data['date_naissance'],
+        'classe': data['classe'],
+        'numero_parents': data['numero_parents'],
+        'montant_scolarite': data['montant_scolarite'],
+        'nom_enregistreur': data['nom_enregistreur']
+    }
+    db.add_eleve(eleve)
+    return jsonify({'success': True})
 
-@app.route('/delete/<id>', methods=['POST'])
-def delete(id):
-    data = load_data()
-    for n in ['primaire', 'secondaire']:
-        data[n] = [e for e in data[n] if e['id'] != id]
-    save_data(data)
-    flash('Élève supprimé avec succès.', 'success')
-    return redirect(url_for('students'))
+# ---------- LISTES ----------
+@app.route('/liste_eleves')
+def liste_eleves():
+    eleves = db.get_eleves()
+    return render_template('liste_eleves.html', eleves=eleves)
 
-# -----------------------------
-# SCOLARITÉ
-# -----------------------------
+@app.route('/liste_ecoliers')
+def liste_ecoliers():
+    ecoliers = db.get_ecoliers()
+    return render_template('liste_ecoliers.html', ecoliers=ecoliers)
+
+# ---------- SCOLARITE ----------
 @app.route('/scolarite')
 def scolarite():
-    data = load_data()
-    eleves = []
-    for n in ['primaire', 'secondaire']:
-        for e in data[n]:
-            paye = sum(p['montant'] for p in e['paiements'])
-            reste = 1000 - paye  # frais annuel fixe
-            eleves.append({'eleve': e, 'paye': paye, 'reste': reste})
-    return render_template('scolarite.html', eleves=eleves)
+    students = db.get_all()
+    for s in students:
+        s['total_paid'] = db.get_total_paid(s)
+        s['reste'] = int(s['montant_scolarite']) - s['total_paid']
+    return render_template('scolarite.html', students=students)
 
-@app.route('/scolarite/payer', methods=['POST'])
-def payer():
-    eleve_id = request.form.get('eleve_id')
-    montant = float(request.form.get('montant', 0))
-    data = load_data()
-    for n in ['primaire', 'secondaire']:
-        for e in data[n]:
-            if e['id'] == eleve_id:
-                e['paiements'].append({
-                    'date': datetime.datetime.now().strftime('%Y-%m-%d'),
-                    'montant': montant
-                })
-                save_data(data)
-                flash('Paiement enregistré.', 'success')
-                return redirect(url_for('scolarite'))
-    flash('Élève introuvable.', 'danger')
-    return redirect(url_for('scolarite'))
+@app.route('/paiement', methods=['POST'])
+def paiement():
+    data = request.json
+    db.add_payment(data['student_id'], data['student_type'], data['amount'])
+    return jsonify({'success': True})
 
-# -----------------------------
-# NOTES
-# -----------------------------
-@app.route('/notes', methods=['GET', 'POST'])
+# ---------- NOTES ----------
+@app.route('/notes')
 def notes():
-    data = load_data()
-    if request.method == 'POST':
-        for n in ['primaire', 'secondaire']:
-            for e in data[n]:
-                for m in MATIERES:
-                    for t in TRIMESTRES:
-                        val = request.form.get(f"{e['id']}_{m}_{t}", '').strip()
-                        e['notes'][m][t] = val
-        save_data(data)
-        flash('Notes enregistrées avec succès.', 'success')
-        return redirect(url_for('notes'))
-    eleves = []
-    for n in ['primaire', 'secondaire']:
-        eleves.extend(data[n])
-    return render_template('notes.html', eleves=eleves, matieres=MATIERES, trimestres=TRIMESTRES)
+    ecoliers = db.get_ecoliers()
+    eleves = db.get_eleves()
+    classes_ecoliers = sorted(set([e['classe'] for e in ecoliers]))
+    classes_eleves = sorted(set([e['classe'] for e in eleves]))
+    return render_template('notes.html', classes_ecoliers=classes_ecoliers, classes_eleves=classes_eleves, matieres=MATIERES)
 
-# -----------------------------
-# IMPORT EXCEL (fusionne sans écraser)
-# -----------------------------
-def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+@app.route('/get_students_by_class', methods=['POST'])
+def get_students_by_class():
+    data = request.json
+    classe = data['classe']
+    is_ecolier = data['is_ecolier']
+    students = [s for s in (db.get_ecoliers() if is_ecolier else db.get_eleves()) if s['classe'] == classe]
+    return jsonify({'students': students})
 
+@app.route('/save_notes', methods=['POST'])
+def save_notes():
+    data = request.json
+    for note in data['notes']:
+        db.add_note(note['student_id'], note['student_type'], note['classe'], note['matiere'], note['note'])
+    return jsonify({'success': True})
+
+# ---------- VUE NOTES ----------
+@app.route('/vue_notes')
+def vue_notes():
+    notes = db.get_notes()
+    classes = sorted(set([n['classe'] for n in notes]))
+    matieres = sorted(set([n['matiere'] for n in notes]))
+    return render_template('vue_notes.html', classes=classes, matieres=matieres)
+
+@app.route('/get_notes_by_class', methods=['POST'])
+def get_notes_by_class():
+    data = request.json
+    classe = data['classe']
+    matiere = data['matiere']
+    all_students = db.get_ecoliers() if classe in ['maternelle','CI','CP','CE1','CE2','CM1','CM2'] else db.get_eleves()
+    students = []
+    for s in all_students:
+        if s['classe'] == classe:
+            notes = db.get_student_notes(s['id'], 'ecolier' if classe in ['maternelle','CI','CP','CE1','CE2','CM1','CM2'] else 'eleve')
+            note_val = next((n['note'] for n in notes if n['matiere'] == matiere), None)
+            students.append({'id': s['id'], 'nom': s['nom'], 'prenoms': s['prenoms'], 'note': note_val})
+    return jsonify({'students': students})
+
+# ---------- IMPORT EXCEL ----------
 @app.route('/import_excel', methods=['GET', 'POST'])
 def import_excel():
     if request.method == 'POST':
-        file = request.files.get('file')
-        if not file or file.filename == '':
-            flash('Aucun fichier sélectionné.', 'danger')
-            return redirect(request.url)
-        if not allowed_file(file.filename):
-            flash('Fichier non autorisé ( uniquement .xlsx ).', 'danger')
-            return redirect(request.url)
-        try:
-            from openpyxl import load_workbook
-            wb = load_workbook(file)
-            ws = wb.active
-            data = load_data()
-            # On suppose :
-            # A:nom, B:prenom, C:classe, D:niveau (primaire/secondaire), E:paiement, F+ : notes
-            for row in ws.iter_rows(min_row=2, values_only=True):
-                if not row[0] or not row[1] or not row[2] or not row[3]:
-                    continue
-                nom, prenom, classe, niveau = str(row[0]).strip(), str(row[1]).strip(), str(row[2]).strip(), str(row[3]).strip().lower()
-                if niveau not in ['primaire', 'secondaire']:
-                    continue
-                paye = float(row[4]) if row[4] else 0
-                eleve = {
-                    'id': str(uuid.uuid4()),
-                    'nom': nom,
-                    'prenom': prenom,
-                    'classe': classe,
-                    'notes': {},
-                    'paiements': []
-                }
-                if paye:
-                    eleve['paiements'].append({'date': datetime.datetime.now().strftime('%Y-%m-%d'), 'montant': paye})
-                for m in MATIERES:
-                    eleve['notes'][m] = {}
-                    for t in TRIMESTRES:
-                        eleve['notes'][m][t] = ''
-                # notes
-                idx = 5
-                for m in MATIERES:
-                    for t in TRIMESTRES:
-                        if idx < len(row) and row[idx]:
-                            eleve['notes'][m][t] = str(row[idx]).strip()
-                        idx += 1
-                data[niveau].append(eleve)
-            save_data(data)
-            flash('Importation réussie avec succès.', 'success')
-            return redirect(url_for('students'))
-        except Exception as e:
-            flash(f'Erreur lors de l\'import : {e}', 'danger')
-            return redirect(url_for('import_excel'))
+        file = request.files['file']
+        if file and file.filename.endswith('.xlsx'):
+            wb = openpyxl.load_workbook(file)
+            # Remplacer toute la base
+            data = {'ecoliers': [], 'eleves': [], 'notes': []}
+            db.save_data(data)
+
+            # Import Écoliers
+            if 'Écoliers' in wb.sheetnames:
+                for row in wb['Écoliers'].iter_rows(min_row=2, values_only=True):
+                    if row[1] and row[2]:
+                        db.add_ecolier({
+                            'nom': row[1], 'prenoms': row[2], 'sexe': row[3], 'date_naissance': row[4],
+                            'classe': row[5], 'numero_parents': str(row[6]), 'montant_scolarite': str(row[7]),
+                            'nom_enregistreur': 'Import Excel'
+                        })
+
+            # Import Élèves
+            if 'Élèves' in wb.sheetnames:
+                for row in wb['Élèves'].iter_rows(min_row=2, values_only=True):
+                    if row[1] and row[2]:
+                        db.add_eleve({
+                            'nom': row[1], 'prenoms': row[2], 'sexe': row[3], 'date_naissance': row[4],
+                            'classe': row[5], 'numero_parents': str(row[6]), 'montant_scolarite': str(row[7]),
+                            'nom_enregistreur': 'Import Excel'
+                        })
+
+            # Import Notes
+            if 'Notes' in wb.sheetnames:
+                for row in wb['Notes'].iter_rows(min_row=2, values_only=True):
+                    if row[0] and row[1] and row[2] and row[3]:
+                        all_students = db.get_all()
+                        for s in all_students:
+                            if f"{s['nom']} {s['prenoms']}" == row[0]:
+                                db.add_note(s['id'], s['type'], row[1], row[2], str(row[3]))
+                                break
+
+            flash('✅ Importation réussie avec succès !', 'success')
+            return redirect(url_for('sauvegarde'))
     return render_template('import_excel.html')
 
-# -----------------------------
-# EXPORT EXCEL – TOUTE LA BASE
-# -----------------------------
+# ---------- EXPORT EXCEL ----------
 @app.route('/export_excel')
 def export_excel():
-    try:
-        data = load_data()
-        wb = Workbook()
-        wb.remove(wb.active)  # enlève feuille vide
-        # Regroupement par classe
-        classes = {}
-        for n in ['primaire', 'secondaire']:
-            for e in data[n]:
-                classe = e['classe']
-                classes.setdefault(classe, []).append(e)
-        for classe, eleves in classes.items():
-            ws = wb.create_sheet(title=classe[:31])  # max 31 car
-            # En-têtes
-            headers = ['Nom', 'Prénom', 'Classe']
-            for m in MATIERES:
-                for t in TRIMESTRES:
-                    headers.append(f"{m}_{t}")
-            headers += ['Total Payé', 'Reste']
-            ws.append(headers)
-            # Lignes
-            for e in eleves:
-                row = [e['nom'], e['prenom'], e['classe']]
-                for m in MATIERES:
-                    for t in TRIMESTRES:
-                        row.append(e['notes'][m][t])
-                paye = sum(p['montant'] for p in e['paiements'])
-                reste = 1000 - paye
-                row += [paye, reste]
-                ws.append(row)
-        # Fichier temp
-        from tempfile import NamedTemporaryFile
-        with NamedTemporaryFile(delete=False, suffix='.xlsx') as tmp:
-            wb.save(tmp.name)
-            tmp_path = tmp.name
-        flash('Exportation réussie avec succès.', 'success')
-        return send_file(tmp_path, as_attachment=True, download_name='ecole_mont_sion_complet.xlsx')
-    except Exception as e:
-        flash(f'Erreur lors de l\'export : {e}', 'danger')
-        return redirect(url_for('students'))
+    wb = openpyxl.Workbook()
 
-# -----------------------------
-# LANCEMENT
-# -----------------------------
+    # Écoliers
+    ws = wb.active
+    ws.title = "Écoliers"
+    headers = ['ID', 'Nom', 'Prénoms', 'Sexe', 'Date de naissance', 'Classe', 'Numéro parents', 'Montant scolarité', 'Total payé', 'Reste', 'Date inscription']
+    for col, header in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col)
+        cell.value = header
+        cell.font = Font(bold=True)
+        cell.fill = PatternFill(start_color="CCCCCC", end_color="CCCCCC", fill_type="solid")
+    for row, e in enumerate(db.get_ecoliers(), 2):
+        total = db.get_total_paid(e)
+        ws.cell(row=row, column=1).value = e['id']
+        ws.cell(row=row, column=2).value = e['nom']
+        ws.cell(row=row, column=3).value = e['prenoms']
+        ws.cell(row=row, column=4).value = e['sexe']
+        ws.cell(row=row, column=5).value = e['date_naissance']
+        ws.cell(row=row, column=6).value = e['classe']
+        ws.cell(row=row, column=7).value = e['numero_parents']
+        ws.cell(row=row, column=8).value = e['montant_scolarite']
+        ws.cell(row=row, column=9).value = total
+        ws.cell(row=row, column=10).value = int(e['montant_scolarite']) - total
+        ws.cell(row=row, column=11).value = e['date_inscription']
+
+    # Élèves
+    ws = wb.create_sheet("Élèves")
+    for col, header in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col)
+        cell.value = header
+        cell.font = Font(bold=True)
+        cell.fill = PatternFill(start_color="CCCCCC", end_color="CCCCCC", fill_type="solid")
+    for row, e in enumerate(db.get_eleves(), 2):
+        total = db.get_total_paid(e)
+        ws.cell(row=row, column=1).value = e['id']
+        ws.cell(row=row, column=2).value = e['nom']
+        ws.cell(row=row, column=3).value = e['prenoms']
+        ws.cell(row=row, column=4).value = e['sexe']
+        ws.cell(row=row, column=5).value = e['date_naissance']
+        ws.cell(row=row, column=6).value = e['classe']
+        ws.cell(row=row, column=7).value = e['numero_parents']
+        ws.cell(row=row, column=8).value = e['montant_scolarite']
+        ws.cell(row=row, column=9).value = total
+        ws.cell(row=row, column=10).value = int(e['montant_scolarite']) - total
+        ws.cell(row=row, column=11).value = e['date_inscription']
+
+    # Notes
+    ws = wb.create_sheet("Notes")
+    note_headers = ['Étudiant', 'Classe', 'Matière', 'Note', 'Date']
+    for col, header in enumerate(note_headers, 1):
+        cell = ws.cell(row=1, column=col)
+        cell.value = header
+        cell.font = Font(bold=True)
+        cell.fill = PatternFill(start_color="CCCCCC", end_color="CCCCCC", fill_type="solid")
+    all_notes = db.get_notes()
+    name_map = {s['id']: f"{s['nom']} {s['prenoms']}" for s in db.get_all()}
+    for row, n in enumerate(all_notes, 2):
+        ws.cell(row=row, column=1).value = name_map.get(n['student_id'], 'Inconnu')
+        ws.cell(row=row, column=2).value = n['classe']
+        ws.cell(row=row, column=3).value = n['matiere']
+        ws.cell(row=row, column=4).value = n['note']
+        ws.cell(row=row, column=5).value = n['date']
+
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
+
+    flash('✅ Exportation réussie avec succès !', 'success')
+    return send_file(output, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', as_attachment=True, download_name=f'ecole_export_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx')
+
+# ---------- SAUVEGARDE ----------
+@app.route('/sauvegarde')
+def sauvegarde():
+    data = db.load_data()
+    stats = {'ecoliers': len(data['ecoliers']), 'eleves': len(data['eleves']), 'notes': len(data['notes'])}
+    return render_template('sauvegarde.html', stats=stats)
+
+# ---------- LANCEMENT ----------
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=PORT, debug=True)
+    port = int(os.environ.get('PORT', 10000))
+    app.run(host='0.0.0.0', port=port, debug=False)
+
