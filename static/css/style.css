@@ -1,67 +1,16 @@
-/* ===== BASE ===== */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
-    color: #fff;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-}
-
-.container {
-    width: 100%;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px;
-    flex: 1;
-}
-
-/* ===== NOM DE L’ÉCOLE ===== */
-.school-name {
-    text-align: center;
-    margin-top: 40px;
-}
-
-.animate-text {
-    font-size: 3em;
-    font-weight: bold;
-    background: linear-gradient(45deg, #ff8a00, #e52e71, #0073e6);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-
-/* ===== SIGNATURE EN BAS ===== */
-.signature {
-    text-align: center;
-    margin-top: auto;
-    margin-bottom: 20px;
-}
-
-.animate-signature {
-    font-size: 1.5em;
-    color: #ffcc00;
-    text-shadow: 0 0 5px #ffcc00;
-}
-
 /* ===== BOUTONS GRANDS ===== */
 .buttons-grid {
     display: flex;
     flex-direction: column;
-    gap: 30px;
-    margin: 40px 0;
+    gap: 20px;
+    width: 100%;
+    padding: 20px;
 }
 
 .home-btn {
     background: linear-gradient(45deg, #0073e6, #00c6ff);
     color: white;
-    padding: 35px 20px;
+    padding: 30px;
     font-size: 1.8em;
     font-weight: bold;
     border-radius: 15px;
@@ -75,42 +24,13 @@ body {
     transform: scale(1.02);
 }
 
-.home-btn i {
-    font-size: 2em;
-    margin-bottom: 10px;
-}
-
-/* ===== FORMULAIRES & TABLEAUX ===== */
-.form-container,
-.table-container {
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(15px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    padding: 40px;
-    border-radius: 20px;
-    margin: 40px auto;
-    max-width: 1000px;
-}
-
-.form-title {
-    color: #fff;
-    text-align: center;
-    margin-bottom: 20px;
-    font-size: 2em;
-}
-
-table {
+/* ===== PAGE OCCUPE TOUT L’ÉCRAN ===== */
+body {
+    margin: 0;
+    padding: 0;
     width: 100%;
-    color: #fff;
-    border-collapse: collapse;
-    font-size: 1.2em;
-}
-
-th, td {
-    padding: 15px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-th {
-    background: rgba(255, 255, 255, 0.1);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
 }
