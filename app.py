@@ -13,7 +13,17 @@ app.secret_key = 'ecole_mont_sion_secret_key'
 
 db = Database()
 
-MATIERES = ['Mathématiques', 'Communication écrite', 'Lecture', 'Anglais', 'SVT', 'Histoire-géographie', 'Espagnol', 'EPS']
+MATIERES = [
+    'Mathématiques',
+    'Communication écrite',
+    'Lecture',
+    'Anglais',
+    'SVT',
+    'Histoire-géographie',
+    'Espagnol',
+    'EPS',
+    'Conduite'
+]
 
 # ---------- ACCUEIL ----------
 @app.route('/')
@@ -68,22 +78,21 @@ def liste_ecoliers():
     ecoliers = db.get_ecoliers()
     return render_template('liste_ecoliers.html', ecoliers=ecoliers)
 
-# ---------- SCOLARITE ----------
+# ---------- SCOLARITÉ (CORRIGÉ) ----------
 @app.route('/scolarite')
 def scolarite():
     students = db.get_all()
     for s in students:
-        s['total_paid'] = db.get_total_paid(s)
-        s['reste'] = int(s['montant_scolarite']) - s['total_paid']
+        try:
+            montant = int(str(s.get('montant_scolarite', '0')).strip()
+        except ValueError:
+            montant = 0
+        total = db.get_total_paid(s)
+        s['total_paid'] = total
+        s['reste'] = montant - total
     return render_template('scolarite.html', students=students)
 
-@app.route('/paiement', methods=['POST'])
-def paiement():
-    data = request.json
-    db.add_payment(data['student_id'], data['student_type'], data['amount'])
-    return jsonify({'success': True})
-
-# ---------- NOTES ----------
+# ---------- NOTES (AVEC EPS & CONDUITE) ----------
 @app.route('/notes')
 def notes():
     ecoliers = db.get_ecoliers()
@@ -107,7 +116,7 @@ def save_notes():
         db.add_note(note['student_id'], note['student_type'], note['classe'], note['matiere'], note['note'])
     return jsonify({'success': True})
 
-# ---------- VUE NOTES ----------
+# ---------- VUE NOTES (CORRIGÉ) ----------
 @app.route('/vue_notes')
 def vue_notes():
     notes = db.get_notes()
@@ -129,18 +138,23 @@ def get_notes_by_class():
             students.append({'id': s['id'], 'nom': s['nom'], 'prenoms': s['prenoms'], 'note': note_val})
     return jsonify({'students': students})
 
-# ---------- IMPORT EXCEL ----------
+# ---------- SAUVEGARDE ----------
+@app.route('/sauvegarde')
+def sauvegarde():
+    data = db.load_data()
+    stats = {'ecoliers': len(data['ecoliers']), 'eleves': len(data['eleves']), 'notes': len(data['notes'])}
+    return render_template('sauvegarde.html', stats=stats)
+
+# ---------- IMPORT / EXPORT ----------
 @app.route('/import_excel', methods=['GET', 'POST'])
 def import_excel():
     if request.method == 'POST':
         file = request.files['file']
         if file and file.filename.endswith('.xlsx'):
             wb = openpyxl.load_workbook(file)
-            # Remplacer toute la base
             data = {'ecoliers': [], 'eleves': [], 'notes': []}
             db.save_data(data)
 
-            # Import Écoliers
             if 'Écoliers' in wb.sheetnames:
                 for row in wb['Écoliers'].iter_rows(min_row=2, values_only=True):
                     if row[1] and row[2]:
@@ -150,7 +164,6 @@ def import_excel():
                             'nom_enregistreur': 'Import Excel'
                         })
 
-            # Import Élèves
             if 'Élèves' in wb.sheetnames:
                 for row in wb['Élèves'].iter_rows(min_row=2, values_only=True):
                     if row[1] and row[2]:
@@ -160,7 +173,6 @@ def import_excel():
                             'nom_enregistreur': 'Import Excel'
                         })
 
-            # Import Notes
             if 'Notes' in wb.sheetnames:
                 for row in wb['Notes'].iter_rows(min_row=2, values_only=True):
                     if row[0] and row[1] and row[2] and row[3]:
@@ -174,11 +186,9 @@ def import_excel():
             return redirect(url_for('sauvegarde'))
     return render_template('import_excel.html')
 
-# ---------- EXPORT EXCEL ----------
 @app.route('/export_excel')
 def export_excel():
     wb = openpyxl.Workbook()
-
     # Écoliers
     ws = wb.active
     ws.title = "Écoliers"
@@ -247,15 +257,7 @@ def export_excel():
     flash('✅ Exportation réussie avec succès !', 'success')
     return send_file(output, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', as_attachment=True, download_name=f'ecole_export_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx')
 
-# ---------- SAUVEGARDE ----------
-@app.route('/sauvegarde')
-def sauvegarde():
-    data = db.load_data()
-    stats = {'ecoliers': len(data['ecoliers']), 'eleves': len(data['eleves']), 'notes': len(data['notes'])}
-    return render_template('sauvegarde.html', stats=stats)
-
 # ---------- LANCEMENT ----------
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 10000))
     app.run(host='0.0.0.0', port=port, debug=False)
-
