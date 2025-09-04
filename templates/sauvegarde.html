@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Sauvegarde - Gestion École{% endblock %}
+{% block title %}Sauvegarde - École Mont Sion{% endblock %}
 
 {% block content %}
 <div class="form-container">
@@ -9,28 +9,33 @@
         Sauvegarde & Import / Export
     </h2>
 
-    <div style="display: grid; gap: 20px;">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
 
-        <!-- Export -->
+    <div style="display: grid; gap: 20px;">
         <a href="{{ url_for('export_excel') }}" class="home-btn">
             <i class="fas fa-file-excel"></i>
             <span>Exporter vers Excel</span>
         </a>
 
-        <!-- Import -->
         <a href="{{ url_for('import_excel') }}" class="home-btn">
             <i class="fas fa-file-import"></i>
             <span>Importer depuis Excel</span>
         </a>
 
-        <!-- Stats -->
         <div style="background: #e3f2fd; padding: 20px; border-radius: 8px;">
             <h3>Statistiques</h3>
             <p><strong>Écoliers :</strong> {{ stats.ecoliers }}</p>
             <p><strong>Élèves :</strong> {{ stats.eleves }}</p>
             <p><strong>Notes :</strong> {{ stats.notes }}</p>
         </div>
-
     </div>
 </div>
 {% endblock %}
