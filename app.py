@@ -1,16 +1,12 @@
-import os
 import sys
-import logging
+print("Python version:", sys.version)
+
 from flask import Flask, render_template, request, jsonify, send_file, flash, redirect, url_for
 from models import Database
 from datetime import datetime
 import openpyxl
 from openpyxl.styles import Font, PatternFill
 import io
-
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-print("🚀 Démarrage de l’application École Mont Sion...")
 
 app = Flask(__name__)
 app.secret_key = 'ecole_mont_sion_secret_key'
@@ -82,7 +78,7 @@ def liste_ecoliers():
     ecoliers = db.get_ecoliers()
     return render_template('liste_ecoliers.html', ecoliers=ecoliers)
 
-# ---------- SCOLARITÉ ----------
+# ---------- SCOLARITÉ (CORRIGÉ) ----------
 @app.route('/scolarite')
 def scolarite():
     students = db.get_all()
@@ -96,7 +92,7 @@ def scolarite():
         s['reste'] = montant - total
     return render_template('scolarite.html', students=students)
 
-# ---------- NOTES ----------
+# ---------- NOTES (CORRIGÉ) ----------
 @app.route('/notes')
 def notes():
     ecoliers = db.get_ecoliers()
@@ -120,7 +116,7 @@ def save_notes():
         db.add_note(note['student_id'], note['student_type'], note['classe'], note['matiere'], note['note'])
     return jsonify({'success': True})
 
-# ---------- VUE NOTES ----------
+# ---------- VUE NOTES (CORRIGÉ) ----------
 @app.route('/vue_notes')
 def vue_notes():
     notes = db.get_notes()
@@ -141,6 +137,13 @@ def get_notes_by_class():
             note_val = next((n['note'] for n in notes if n['matiere'] == matiere), None)
             students.append({'id': s['id'], 'nom': s['nom'], 'prenoms': s['prenoms'], 'note': note_val})
     return jsonify({'students': students})
+
+# ---------- SAUVEGARDE ----------
+@app.route('/sauvegarde')
+def sauvegarde():
+    data = db.load_data()
+    stats = {'ecoliers': len(data['ecoliers']), 'eleves': len(data['eleves']), 'notes': len(data['notes'])}
+    return render_template('sauvegarde.html', stats=stats)
 
 # ---------- IMPORT / EXPORT ----------
 @app.route('/import_excel', methods=['GET', 'POST'])
@@ -258,3 +261,4 @@ def export_excel():
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 10000))
     app.run(host='0.0.0.0', port=port, debug=False)
+    
