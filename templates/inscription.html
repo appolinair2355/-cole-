@@ -1,42 +1,39 @@
 {% extends "base.html" %}
 
-{% block title %}Inscription - Gestion École{% endblock %}
+{% block title %}Inscription - École Mont Sion{% endblock %}
 
 {% block content %}
 <div class="form-container">
-    <h2 class="form-title">
-        <i class="fas fa-user-plus"></i>
-        Formulaire d'Inscription
-    </h2>
-    
+    <h2 class="form-title">Formulaire d'Inscription</h2>
+
     <form id="inscription-form">
         <div class="form-group">
             <label for="nom">Nom *</label>
-            <input type="text" id="nom" name="nom" required>
+            <input type="text" id="nom" name="nom" required style="background:#fff; color:#000; font-size:1.2em; padding:10px;">
         </div>
-        
+
         <div class="form-group">
             <label for="prenoms">Prénoms *</label>
-            <input type="text" id="prenoms" name="prenoms" required>
+            <input type="text" id="prenoms" name="prenoms" required style="background:#fff; color:#000; font-size:1.2em; padding:10px;">
         </div>
-        
+
         <div class="form-group">
             <label for="sexe">Sexe *</label>
-            <select id="sexe" name="sexe" required>
+            <select id="sexe" name="sexe" required style="background:#fff; color:#000; font-size:1.2em; padding:10px;">
                 <option value="">Sélectionner</option>
                 <option value="Masculin">Masculin</option>
                 <option value="Féminin">Féminin</option>
             </select>
         </div>
-        
+
         <div class="form-group">
             <label for="date_naissance">Date de naissance *</label>
-            <input type="date" id="date_naissance" name="date_naissance" required>
+            <input type="date" id="date_naissance" name="date_naissance" required style="background:#fff; color:#000; font-size:1.2em; padding:10px;">
         </div>
-        
+
         <div class="form-group">
             <label for="classe">Classe *</label>
-            <select id="classe" name="classe" required>
+            <select id="classe" name="classe" required style="background:#fff; color:#000; font-size:1.2em; padding:10px;">
                 <option value="">Sélectionner une classe</option>
                 <optgroup label="Écoles">
                     <option value="maternelle">Maternelle</option>
@@ -55,26 +52,51 @@
                 </optgroup>
             </select>
         </div>
-        
+
         <div class="form-group">
             <label for="numero_parents">Numéro des parents * (8 chiffres)</label>
-            <input type="tel" id="numero_parents" name="numero_parents" pattern="[0-9]{8}" required>
+            <input type="tel" id="numero_parents" name="numero_parents" pattern="[0-9]{8}" required style="background:#fff; color:#000; font-size:1.2em; padding:10px;">
         </div>
-        
+
         <div class="form-group">
             <label for="montant_scolarite">Montant de la scolarité *</label>
-            <input type="number" id="montant_scolarite" name="montant_scolarite" required>
+            <input type="number" id="montant_scolarite" name="montant_scolarite" required style="background:#fff; color:#000; font-size:1.2em; padding:10px;">
         </div>
-        
+
         <div class="form-group">
             <label for="nom_enregistreur">Nom de l'enregistreur *</label>
-            <input type="text" id="nom_enregistreur" name="nom_enregistreur" required>
+            <input type="text" id="nom_enregistreur" name="nom_enregistreur" required style="background:#fff; color:#000; font-size:1.2em; padding:10px;">
         </div>
-        
-        <button type="submit" class="btn">
-            <i class="fas fa-save"></i> Enregistrer
-        </button>
+
+        <button type="submit" class="btn" style="background:#ff416c; color:#fff; font-size:1.3em; padding:15px 30px;">Enregistrer</button>
+
+        <div id="success-message" style="display:none; color:#00ff88; font-weight:bold; margin-top:20px;">
+            ✅ Inscription réussie – enregistrée dans la base de données !
+        </div>
     </form>
 </div>
+
+<script>
+document.getElementById('inscription-form').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    const form = e.target;
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData.entries());
+
+    const isEcolier = ['maternelle', 'CI', 'CP', 'CE1', 'CE2', 'CM1', 'CM2'].includes(data.classe);
+    const endpoint = isEcolier ? '/inscrire_ecolier' : '/inscrire_eleve';
+
+    const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    });
+
+    const result = await res.json();
+    if (result.success) {
+        document.getElementById('success-message').style.display = 'block';
+        form.reset();
+    }
+});
+</script>
 {% endblock %}
-              
