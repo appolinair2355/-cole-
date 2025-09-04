@@ -1,13 +1,12 @@
 {% extends "base.html" %}
 
-{% block title %}Accueil - Gestion École{% endblock %}
+{% block title %}Accueil - École Mont Sion de Bapkerou{% endblock %}
 
 {% block content %}
 <div class="accueil-container">
-    <h1 class="main-title">
-        <i class="fas fa-school"></i>
-        Gestion École Moderne
-    </h1>
+    <div class="school-name">
+        <span class="animate-text">École 🏫 Mont Sion de Bapkerou</span>
+    </div>
 
     <div class="buttons-grid">
         <a href="{{ url_for('inscription') }}" class="home-btn">
@@ -45,6 +44,9 @@
             <span>Sauvegarder & Importer</span>
         </a>
     </div>
+
+    <div class="signature">
+        <span class="animate-signature">Développé : Sossou Kouamé Appolinaire</span>
+    </div>
 </div>
 {% endblock %}
-            
