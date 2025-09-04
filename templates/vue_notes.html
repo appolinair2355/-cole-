@@ -1,100 +1,80 @@
 {% extends "base.html" %}
 
-{% block title %}Visualisation des Notes - Gestion École{% endblock %}
+{% block title %}Voir Notes - École Mont Sion{% endblock %}
 
 {% block content %}
 <div class="table-container">
-    <h2 class="form-title">
-        <i class="fas fa-chart-bar"></i>
-        Visualisation des Notes
-    </h2>
-    
+    <h2 class="form-title">Toutes les Notes</h2>
+
     <div style="display: flex; gap: 20px; margin-bottom: 20px;">
         <div style="flex: 1;">
             <label for="classe">Classe</label>
-            <select id="classe" onchange="loadNotes()">
-                <option value="">Sélectionner</option>
+            <select id="classe" onchange="loadNotes()" style="background:#fff; color:#000; font-size:1.2em; padding:10px;">
+                <option value="">Toutes les classes</option>
                 {% for classe in classes %}
                 <option value="{{ classe }}">{{ classe }}</option>
                 {% endfor %}
             </select>
         </div>
-        
         <div style="flex: 1;">
             <label for="matiere">Matière</label>
-            <select id="matiere" onchange="loadNotes()">
-                <option value="">Sélectionner</option>
+            <select id="matiere" onchange="loadNotes()" style="background:#fff; color:#000; font-size:1.2em; padding:10px;">
+                <option value="">Toutes les matières</option>
                 {% for matiere in matieres %}
                 <option value="{{ matiere }}">{{ matiere }}</option>
                 {% endfor %}
             </select>
         </div>
     </div>
-    
-    <div id="notes-container"></div>
+
+    <div id="notes-container">
+        <p>Choisir une classe et une matière pour voir les notes</p>
+    </div>
 </div>
 
 <script>
-function loadNotes() {
+async function loadNotes() {
     const classe = document.getElementById('classe').value;
     const matiere = document.getElementById('matiere').value;
-    
-    if (!classe || !matiere) {
-        document.getElementById('notes-container').innerHTML = '';
-        return;
-    }
-    
-    fetch('/get_notes_by_class', {
+
+    const res = await fetch('/get_all_notes', {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            classe: classe,
-            matiere: matiere
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        displayNotes(data.students);
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ classe: classe, matiere: matiere })
     });
+
+    const data = await res.json();
+    displayAllNotes(data.notes);
 }
 
-function displayNotes(students) {
+function displayAllNotes(notes) {
     const container = document.getElementById('notes-container');
-    
-    if (students.length === 0) {
-        container.innerHTML = '<p style="text-align: center; color: #666;">Aucune note trouvée</p>';
+
+    if (notes.length === 0) {
+        container.innerHTML = '<p>Aucune note trouvée</p>';
         return;
     }
-    
-    let html = '<table><thead><tr><th>Nom</th><th>Prénoms</th><th>Note</th><th>Actions</th></tr></thead><tbody>';
-    
-    students.forEach(student => {
+
+    let html = '<table><thead><tr><th>Élève</th><th>Classe</th><th>Matière</th><th>Note</th><th>Date</th></tr></thead><tbody>';
+
+    notes.forEach(note => {
         html += `
             <tr>
-                <td>${student.nom}</td>
-                <td>${student.prenoms}</td>
-                <td>${student.note || '-'}</td>
-                <td>
-                    <button class="payment-btn" onclick="editNote(${student.id})">
-                        <i class="fas fa-edit"></i> Modifier
-                    </button>
-                </td>
+                <td>${note.student_name}</td>
+                <td>${note.classe}</td>
+                <td>${note.matiere}</td>
+                <td>${note.note}</td>
+                <td>${note.date}</td>
             </tr>
         `;
     });
-    
+
     html += '</tbody></table>';
     container.innerHTML = html;
 }
 
-function editNote(studentId) {
-    const newNote = prompt('Entrez la nouvelle note:');
-    if (newNote && newNote >= 0 && newNote <= 20) {
-        // Implémenter la logique de modification
-        showSuccess('Note modifiée avec succès');
-    }
-}
+// Charger toutes les notes au début
+loadNotes();
 </script>
 {% endblock %}
+    
