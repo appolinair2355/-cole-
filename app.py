@@ -1,14 +1,13 @@
 import os
 import sys
 import logging
-from flask import Flask, render_template, request, jsonify, send_file, flash, redirect, url_for
+from flask import Flask, render_template, request, jsonify, send_file, flash, redirect, url_for, session
 from models import Database
 from datetime import datetime
 import openpyxl
 from openpyxl.styles import Font, PatternFill
 import io
 
-# Logging
 logging.basicConfig(level=logging.INFO)
 print("🚀 Démarrage de l’application École Mont Sion...")
 
@@ -16,6 +15,9 @@ app = Flask(__name__)
 app.secret_key = 'ecole_mont_sion_secret_key'
 
 db = Database()
+
+# MOTS DE PASSE AUTHORISÉS
+MOTS_DE_PASSE = ['kouame', 'arrow', 'celestin', 'Viviane']
 
 MATIERES = [
     'Mathématiques',
@@ -29,12 +31,62 @@ MATIERES = [
     'Conduite'
 ]
 
-# ---------- ACCUEIL ----------
+# ---------- AUTH (MOT DE PASSE) ----------
+@app.route('/auth')
+def auth():
+    next_page = request.args.get('next', 'accueil')
+    return render_template('auth.html', next_page=next_page)
+
+@app.route('/verifier', methods=['POST'])
+def verifier():
+    password = request.form.get('password', '').strip()
+    next_page = request.form.get('next_page', 'accueil')
+
+    if password in MOTS_DE_PASSE:
+        session['access_granted'] = True
+        return redirect(url_for(next_page))
+    else:
+        flash('❌ Vous n\'êtes pas autorisé à accéder à cette fonction. 🔒 Contactez SOSSOU Kouamé ou la directrice pour plus de détails. 💡 Merci de votre compréhension.', 'error')
+        return redirect(url_for('auth', next=next_page))
+
+# ---------- PROTECTION DES ROUTES ----------
+def require_auth(f):
+    def decorated_function(*args, **kwargs):
+        if not session.get('access_granted'):
+            return redirect(url_for('auth', next=request.endpoint))
+        return f(*args, **kwargs)
+    decorated_function.__name__ = f.__name__
+    return decorated_function
+
+# ---------- ROUTES PROTEGEES ----------
+@app.route('/notes')
+@require_auth
+def notes():
+    ecoliers = db.get_ecoliers()
+    eleves = db.get_eleves()
+    classes_ecoliers = sorted(set([e['classe'] for e in ecoliers]))
+    classes_eleves = sorted(set([e['classe'] for e in eleves]))
+    return render_template('notes.html', classes_ecoliers=classes_ecoliers, classes_eleves=classes_eleves, matieres=MATIERES)
+
+@app.route('/scolarite')
+@require_auth
+def scolarite():
+    students = db.get_all()
+    for s in students:
+        try:
+            montant = int(str(s.get('montant_scolarite', '0')).strip())
+        except ValueError:
+            montant = 0
+        total = db.get_total_paid(s)
+        s['total_paid'] = total
+        s['reste'] = montant - total
+    return render_template('scolarite.html', students=students)
+
+# ---------- AUTRES ROUTES (NON PROTEGEES) ----------
 @app.route('/')
 def accueil():
     return render_template('accueil.html')
 
-# ---------- INSCRIPTION ----------
 @app.route('/inscription')
 def inscription():
     return render_template('inscription.html')
@@ -69,7 +121,6 @@ def inscrire_eleve():
     })
     return jsonify({'success': True})
 
-# ---------- LISTES ----------
 @app.route('/liste_eleves')
 def liste_eleves():
     eleves = db.get_eleves()
@@ -79,58 +130,6 @@ def liste_eleves():
 def liste_ecoliers():
     ecoliers = db.get_ecoliers()
     return render_template('liste_ecoliers.html', ecoliers=ecoliers)
-
-# ---------- SCOLARITÉ (PAIEMENT AUTO + RESTE INSTANTANÉ) ----------
-@app.route('/scolarite')
-def scolarite():
-    students = db.get_all()
-    for s in students:
-        try:
-            montant = int(str(s.get('montant_scolarite', '0')).strip())
-        except ValueError:
-            montant = 0
-        total = db.get_total_paid(s)
-        s['total_paid'] = total
-        s['reste'] = montant - total
-    return render_template('scolarite.html', students=students)
-
-@app.route('/paiement', methods=['POST'])
-def paiement():
-    data = request.json
-    success = db.add_payment(data['student_id'], data['student_type'], data['amount'])
-    if success:
-        # Recalculer le reste
-        student = None
-        if data['student_type'] == 'ecolier':
-            for s in db.get_ecoliers():
-                if s['id'] == data['student_id']:
-                    student = s
-                    break
-        else:
-            for s in db.get_eleves():
-                if s['id'] == data['student_id']:
-                    student = s
-                    break
-        
-        if student:
-            try:
-                montant = int(str(student.get('montant_scolarite', '0')).strip())
-            except ValueError:
-                montant = 0
-            total = db.get_total_paid(student)
-            reste = montant - total
-            return jsonify({'success': True, 'total_paid': total, 'reste': reste})
-    
-    return jsonify({'success': False})
-
-# ---------- NOTES (LISTE + SAISIE DANS LA MÊME PAGE) ----------
-@app.route('/notes')
-def notes():
-    ecoliers = db.get_ecoliers()
-    eleves = db.get_eleves()
-    classes_ecoliers = sorted(set([e['classe'] for e in ecoliers]))
-    classes_eleves = sorted(set([e['classe'] for e in eleves]))
-    return render_template('notes.html', classes_ecoliers=classes_ecoliers, classes_eleves=classes_eleves, matieres=MATIERES)
 
 @app.route('/get_students_by_class', methods=['POST'])
 def get_students_by_class():
@@ -147,13 +146,6 @@ def save_notes():
         db.add_note(note['student_id'], note['student_type'], note['classe'], note['matiere'], note['note'])
     return jsonify({'success': True})
 
-@app.route('/vue_notes')
-def vue_notes():
-    notes = db.get_notes()
-    classes = sorted(set([n['classe'] for n in notes]))
-    matieres = sorted(set([n['matiere'] for n in notes]))
-    return render_template('vue_notes.html', classes=classes, matieres=matieres)
-
 @app.route('/get_notes_by_class', methods=['POST'])
 def get_notes_by_class():
     data = request.json
@@ -168,17 +160,14 @@ def get_notes_by_class():
             students.append({'id': s['id'], 'nom': s['nom'], 'prenoms': s['prenoms'], 'note': note_val})
     return jsonify({'students': students})
 
-# ---------- VOIR TOUTES LES NOTES ----------
 @app.route('/get_all_notes', methods=['POST'])
 def get_all_notes():
     data = request.json
     classe = data.get('classe', '')
     matiere = data.get('matiere', '')
-
     notes = db.get_notes(classe=classe if classe else None, matiere=matiere if matiere else None)
     all_students = db.get_all()
     name_map = {s['id']: f"{s['nom']} {s['prenoms']}" for s in all_students}
-
     result = []
     for note in notes:
         result.append({
@@ -188,15 +177,14 @@ def get_all_notes():
             'note': note['note'],
             'date': note['date']
         })
-
     return jsonify({'notes': result})
 
-# ---------- SAUVEGARDE / IMPORT / EXPORT ----------
-@app.route('/sauvegarde')
-def sauvegarde():
-    data = db.load_data()
-    stats = {'ecoliers': len(data['ecoliers']), 'eleves': len(data['eleves']), 'notes': len(data['notes'])}
-    return render_template('sauvegarde.html', stats=stats)
+@app.route('/vue_notes')
+def vue_notes():
+    notes = db.get_notes()
+    classes = sorted(set([n['classe'] for n in notes]))
+    matieres = sorted(set([n['matiere'] for n in notes]))
+    return render_template('vue_notes.html', classes=classes, matieres=matieres)
 
 @app.route('/import_excel', methods=['GET', 'POST'])
 def import_excel():
