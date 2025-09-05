@@ -35,7 +35,7 @@ body {
     display: inline-block;
     font-size: 3em;
     font-weight: bold;
-    background: linear-gradient(90deg, #ff8a00, #e52e71);
+    background: linear-gradient(90deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     animation: scroll 10s linear infinite;
@@ -62,39 +62,82 @@ body {
     animation: scroll 12s linear infinite;
 }
 
-/* ===== BOUTONS GRANDS ET COLORÉS ===== */
-.buttons-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 30px;
-    margin: 40px 0;
+/* ===== BOUTONS ARC-EN-CIEL UNIVERSELS ===== */
+.btn,
+.home-btn,
+.payment-btn,
+.note-btn,
+.save-btn {
+    background: linear-gradient(45deg,
+        #ff0000 0%,
+        #ff7f00 14%,
+        #ffff00 28%,
+        #00ff00 42%,
+        #0000ff 57%,
+        #4b0082 71%,
+        #9400d3 85%,
+        #ff0000 100%);
+    background-size: 400% 400%;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    animation: arc-en-ciel 3s ease infinite;
+}
+
+.btn:hover,
+.home-btn:hover,
+.payment-btn:hover,
+.note-btn:hover,
+.save-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.6);
+}
+
+@keyframes arc-en-ciel {
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* ===== TAILLES SPÉCIFIQUES ===== */
+.btn {
+    padding: 12px 30px;
+    font-size: 1.2em;
 }
 
 .home-btn {
-    background: linear-gradient(45deg, #ff416c, #ff4b2b);
-    color: white;
     padding: 35px 20px;
     font-size: 1.8em;
-    font-weight: bold;
-    border-radius: 15px;
     text-decoration: none;
     text-align: center;
     width: 100%;
-    transition: transform 0.3s ease;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    border-radius: 15px;
 }
 
-.home-btn:hover {
-    transform: scale(1.05);
+.payment-btn {
+    padding: 8px 15px;
+    font-size: 1em;
+    border-radius: 6px;
 }
 
-.home-btn i {
-    font-size: 2em;
-    margin-bottom: 10px;
+.note-btn {
+    padding: 6px 12px;
+    font-size: 0.9em;
+    border-radius: 5px;
+}
+
+.save-btn {
+    padding: 15px 30px;
+    font-size: 1.3em;
+    border-radius: 8px;
 }
 
 /* ===== FORMULAIRES ===== */
-.form-container {
+.form-container,
+.table-container {
     background: rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(15px);
     border: 1px solid rgba(255, 255, 255, 0.2);
@@ -141,21 +184,6 @@ body {
     box-shadow: 0 0 10px #ff416c;
 }
 
-.btn {
-    background: linear-gradient(45deg, #ff416c, #ff4b2b);
-    color: white;
-    padding: 15px 30px;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 1.3em;
-    transition: background 0.3s;
-}
-
-.btn:hover {
-    background: linear-gradient(45deg, #ff4b2b, #ff416c);
-}
-
 /* ===== TABLEAUX ===== */
 table {
     width: 100%;
@@ -171,5 +199,45 @@ th, td {
 
 th {
     background: rgba(255, 255, 255, 0.1);
+}
+
+/* ===== AUTH PAGE ===== */
+.auth-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 70vh;
+}
+
+.auth-box {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 40px;
+    border-radius: 20px;
+    text-align: center;
+    max-width: 500px;
+    width: 90%;
+}
+
+.auth-title {
+    font-size: 2em;
+    color: #ffcc00;
+    margin-bottom: 20px;
+}
+
+.alert-error {
+    color: #ff416c;
+    font-weight: bold;
+    margin-bottom: 20px;
+    background: rgba(255, 65, 108, 0.2);
+    padding: 10px;
+    border-radius: 8px;
+}
+
+.auth-footer {
+    margin-top: 20px;
+    color: #fff;
+    font-size: 1em;
     }
-    
+                                
