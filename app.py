@@ -61,10 +61,12 @@ def scolarite():
 
 # ---------- AUTRES ROUTES ----------
 @app.route('/')
-def accueil(): return render_template('accueil.html')
+def accueil():
+    return render_template('accueil.html')
 
 @app.route('/inscription')
-def inscription(): return render_template('inscription.html')
+def inscription():
+    return render_template('inscription.html')
 
 @app.route('/inscrire_ecolier', methods=['POST'])
 def inscrire_ecolier():
@@ -75,10 +77,12 @@ def inscrire_eleve():
     data = request.json; db.add_eleve(data); return jsonify({'success': True})
 
 @app.route('/liste_eleves')
-def liste_eleves(): return render_template('liste_eleves.html', eleves=db.get_eleves())
+def liste_eleves():
+    return render_template('liste_eleves.html', eleves=db.get_eleves())
 
 @app.route('/liste_ecoliers')
-def liste_ecoliers(): return render_template('liste_ecoliers.html', ecoliers=db.get_ecoliers())
+def liste_ecoliers():
+    return render_template('liste_ecoliers.html', ecoliers=db.get_ecoliers())
 
 @app.route('/get_students_by_class', methods=['POST'])
 def get_students_by_class():
@@ -89,7 +93,8 @@ def get_students_by_class():
 @app.route('/save_notes', methods=['POST'])
 def save_notes():
     data = request.json
-    for note in data['notes']: db.add_note(note['student_id'], note['student_type'], note['classe'], note['matiere'], note['note'])
+    for note in data['notes']:
+        db.add_note(note['student_id'], note['student_type'], note['classe'], note['matiere'], note['note'])
     return jsonify({'success': True})
 
 @app.route('/get_notes_by_class', methods=['POST'])
@@ -127,17 +132,22 @@ def import_excel():
             wb = openpyxl.load_workbook(file); data = {'ecoliers': [], 'eleves': [], 'notes': []}; db.save_data(data)
             if 'Écoliers' in wb.sheetnames:
                 for row in wb['Écoliers'].iter_rows(min_row=2, values_only=True):
-                    if row[1] and row[2]: db.add_ecolier({'nom': row[1], 'prenoms': row[2], 'sexe': row[3], 'date_naissance': row[4], 'classe': row[5], 'numero_parents': str(row[6]), 'montant_scolarite': str(row[7]), 'nom_enregistreur': 'Import Excel'})
+                    if row[1] and row[2]:
+                        db.add_ecolier({'nom': row[1], 'prenoms': row[2], 'sexe': row[3], 'date_naissance': row[4], 'classe': row[5], 'numero_parents': str(row[6]), 'montant_scolarite': str(row[7]), 'nom_enregistreur': 'Import Excel'})
             if 'Élèves' in wb.sheetnames:
                 for row in wb['Élèves'].iter_rows(min_row=2, values_only=True):
-                    if row[1] and row[2]: db.add_eleve({'nom': row[1], 'prenoms': row[2], 'sexe': row[3], 'date_naissance': row[4], 'classe': row[5], 'numero_parents': str(row[6]), 'montant_scolarite': str(row[7]), 'nom_enregistreur': 'Import Excel'})
+                    if row[1] and row[2]:
+                        db.add_eleve({'nom': row[1], 'prenoms': row[2], 'sexe': row[3], 'date_naissance': row[4], 'classe': row[5], 'numero_parents': str(row[6]), 'montant_scolarite': str(row[7]), 'nom_enregistreur': 'Import Excel'})
             if 'Notes' in wb.sheetnames:
                 for row in wb['Notes'].iter_rows(min_row=2, values_only=True):
                     if row[0] and row[1] and row[2] and row[3]:
                         all_students = db.get_all()
                         for s in all_students:
-                            if f"{s['nom']} {s['prenoms']}" == row[0]: db.add_note(s['id'], s['type'], row[1], row[2], str(row[3])); break
-            flash('✅ Importation réussie avec succès !', 'success'); return redirect(url_for('sauvegarde'))
+                            if f"{s['nom']} {s['prenoms']}" == row[0]:
+                                db.add_note(s['id'], s['type'], row[1], row[2], str(row[3]))
+                                break
+            flash('✅ Importation réussie avec succès !', 'success')
+            return redirect(url_for('sauvegarde'))
     return render_template('import_excel.html')
 
 @app.route('/export_excel')
@@ -148,21 +158,53 @@ def export_excel():
     for col, header in enumerate(headers, 1):
         cell = ws.cell(row=1, column=col); cell.value = header; cell.font = Font(bold=True); cell.fill = PatternFill(start_color="CCCCCC", end_color="CCCCCC", fill_type="solid")
     for row, e in enumerate(db.get_ecoliers(), 2):
-        total = db.get_total_paid(e); ws.cell(row=row, column=1).value = e['id']; ws.cell(row=row, column=2).value = e['nom']; ws.cell(row=row, column=3).value = e['prenoms']; ws.cell(row=row, column=4).value = e['sexe']; ws.cell(row=row, column=5).value = e['date_naissance']; ws.cell(row=row, column=6).value = e['classe']; ws.cell(row=row, column=7).value = e['numero_parents']; ws.cell(row=row, column=8).value = e['montant_scolarite']; ws.cell(row=row, column=9).value = total; ws.cell(row=row, column=10).value = int(e['montant_scolarite']) - total; ws.cell(row=row, column=11).value = e['date_inscription']
+        total = db.get_total_paid(e)
+        ws.cell(row=row, column=1).value = e['id']
+        ws.cell(row=row, column=2).value = e['nom']
+        ws.cell(row=row, column=3).value = e['prenoms']
+        ws.cell(row=row, column=4).value = e['sexe']
+        ws.cell(row=row, column=5).value = e['date_naissance']
+        ws.cell(row=row, column=6).value = e['classe']
+        ws.cell(row=row, column=7).value = e['numero_parents']
+        ws.cell(row=row, column=8).value = e['montant_scolarite']
+        ws.cell(row=row, column=9).value = total
+        ws.cell(row=row, column=10).value = int(e['montant_scolarite']) - total
+        ws.cell(row=row, column=11).value = e['date_inscription']
     ws = wb.create_sheet("Élèves")
     for col, header in enumerate(headers, 1):
         cell = ws.cell(row=1, column=col); cell.value = header; cell.font = Font(bold=True); cell.fill = PatternFill(start_color="CCCCCC", end_color="CCCCCC", fill_type="solid")
     for row, e in enumerate(db.get_eleves(), 2):
-        total = db.get_total_paid(e); ws.cell(row=row, column=1).value = e['id']; ws.cell(row=row, column=2).value = e['nom']; ws.cell(row=row, column=3).value = e['prenoms']; ws.cell(row=row, column=4).value = e['sexe']; ws.cell(row=row, column=5).value = e['date_naissance']; ws.cell(row=row, column=6).value = e['classe']; ws.cell(row=row, column=7).value = e['numero_parents']; ws.cell(row=row, column=8).value = e['montant_scolarite']; ws.cell(row=row, column=9).value = total; ws.cell(row=row, column=10).value = int(e['montant_scolarite']) - total; ws.cell(row=row, column=11).value = e['date_inscription']
+        total = db.get_total_paid(e)
+        ws.cell(row=row, column=1).value = e['id']
+        ws.cell(row=row, column=2).value = e['nom']
+        ws.cell(row=row, column=3).value = e['prenoms']
+        ws.cell(row=row, column=4).value = e['sexe']
+        ws.cell(row=row, column=5).value = e['date_naissance']
+        ws.cell(row=row, column=6).value = e['classe']
+        ws.cell(row=row, column=7).value = e['numero_parents']
+        ws.cell(row=row, column=8).value = e['montant_scolarite']
+        ws.cell(row=row, column=9).value = total
+        ws.cell(row=row, column=10).value = int(e['montant_scolarite']) - total
+        ws.cell(row=row, column=11).value = e['date_inscription']
     ws = wb.create_sheet("Notes"); note_headers = ['Étudiant', 'Classe', 'Matière', 'Note', 'Date']
     for col, header in enumerate(note_headers, 1):
         cell = ws.cell(row=1, column=col); cell.value = header; cell.font = Font(bold=True); cell.fill = PatternFill(start_color="CCCCCC", end_color="CCCCCC", fill_type="solid")
     all_notes = db.get_notes(); name_map = {s['id']: f"{s['nom']} {s['prenoms']}" for s in db.get_all()}
     for row, n in enumerate(all_notes, 2):
-        ws.cell(row=row, column=1).value = name_map.get(n['student_id'], 'Inconnu'); ws.cell(row=row, column=2).value = n['classe']; ws.cell(row=row, column=3).value = n['matiere']; ws.cell(row=row, column=4).value = n['note']; ws.cell(row=row, column=5).value = n['date']
-    output = io.BytesIO(); wb.save(output); output.seek(0); flash('✅ Exportation réussie avec succès !', 'success'); return send_file(output, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', as_attachment=True, download_name=f'ecole_export_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx')
+        ws.cell(row=row, column=1).value = name_map.get(n['student_id'], 'Inconnu')
+        ws.cell(row=row, column=2).value = n['classe']
+        ws.cell(row=row, column=3).value = n['matiere']
+        ws.cell(row=row, column=4).value = n['note']
+        ws.cell(row=row, column=5).value = n['date']
+    output = io.BytesIO(); wb.save(output); output.seek(0)
+    flash('✅ Exportation réussie avec succès !', 'success')
+    return send_file(output, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', as_attachment=True, download_name=f'ecole_export_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx')
+
+# ---------- NOUVELLE ROUTE SAUVEGARDE ----------
+@app.route('/sauvegarde')
+def sauvegarde():
+    return render_template('sauvegarde.html')
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 10000))
     app.run(host='0.0.0.0', port=port, debug=False)
-        
