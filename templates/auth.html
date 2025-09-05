@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}Accès Restreint - École Mont Sion{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-box">
+        <h2 class="auth-title">🔐 Accès Restreint</h2>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST" action="{{ url_for('verifier') }}">
+            <input type="hidden" name="next_page" value="{{ next_page }}">
+            
+            <div class="form-group">
+                <label for="password">Mot de passe :</label>
+                <input type="password" id="password" name="password" required 
+                       style="background:#fff; color:#000; font-size:1.2em; padding:10px;">
+            </div>
+
+            <button type="submit" class="btn">Valider</button>
+        </form>
+
+        <div class="auth-footer">
+            <p>💡 <strong>Accès autorisé pour :</strong> kouame, arrow, celestin, Viviane</p>
+            <a href="{{ url_for('accueil') }}" class="home-btn" style="margin-top:20px;">
+                <i class="fas fa-home"></i> Retour à l'accueil
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+  
